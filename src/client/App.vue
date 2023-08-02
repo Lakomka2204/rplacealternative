@@ -86,7 +86,7 @@ onMounted(async () => {
     }
   });
 });
-const socket = io('ws://localhost:3000', {
+const socket = io(`ws://`, {
   path: '/ws',
 });
 function ppWrap(ev) {
