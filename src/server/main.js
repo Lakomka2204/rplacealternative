@@ -23,21 +23,21 @@ app.use("/pixels", require("./routes/pixels"));
 app.use("/users", require("./routes/users"));
 app.use("/admin", require("./routes/admin"));
 const port = process.env.PORT || 3000;
-ViteExpress.config({mode:process.env.NODE_ENV || 'production'});
-async function createMainServer() {
-  const server = http.createServer(app);
-  createIOServer(server);
-  const vite = await createServer({
-    server: {
-      middlewareMode: true,
-      hmr: { server },
-    },
-    appType: "spa",
-    mode: process.env.NODE_ENV || 'development'
-  });
-  app.use(vite.middlewares);
-  server.listen(port, () => {
-    console.log("Server is listening on port %d...", port);
-  });
-}
-createMainServer();
+  ViteExpress.config({mode:process.env.NODE_ENV || 'production'});
+  async function createMainServer() {
+    const server = http.createServer(app);
+    createIOServer(server);
+    const vite = await createServer({
+      server: {
+        middlewareMode: true,
+        hmr: { server },
+      },
+      appType: "spa",
+      mode: process.env.NODE_ENV || 'development'
+    });
+    app.use(vite.middlewares);
+    server.listen(port, () => {
+      console.log("Server is listening on port %d...", port);
+    });
+  }
+  createMainServer();

@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "nodemon src/server/main.js -w src/server",
-    "start": "NODE_ENV=production node src/server/main.js",
+    "start": "node src/server/production.js",
     "build": "vite build",
-    "preview":"vite preview"
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.4.0",
@@ -29,6 +29,6 @@
     "@types/js-cookie": "^3.0.3",
     "@vitejs/plugin-vue": "^4.0.0",
     "nodemon": "^3.0.1",
-    "vite": "^4.0.4"
+    "vite": "^4.4.8"
   }
 }

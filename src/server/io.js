@@ -1,4 +1,4 @@
-const { Server } = require("socket.io");
+const {Server} = require("socket.io");
 const Pixel = require("./models/pixel");
 const User = require("./models/user");
 const jwt = require("jsonwebtoken");
@@ -21,7 +21,7 @@ module.exports = {
         return acc;
       }, {});
     });
-    const io = new Server(server, { path: "/ws" });
+    const io = new Server(server, { path: "/ws", serveClient: true});
     io.on("connection", async (socket) => {
       socket.broadcast.emit("online", io.engine.clientsCount);
       const initpixels = await Pixel.find({});
@@ -72,5 +72,6 @@ module.exports = {
         socket.broadcast.emit("online", io.engine.clientsCount);
       });
     });
+    return io;
   },
 };
