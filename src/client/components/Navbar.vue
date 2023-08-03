@@ -42,9 +42,9 @@
         <div class="input-group mb-3 has-validation">
           <label for="loginUsername" class="input-group-text user-select-none w-25 justify-content-center">Email</label>
           <input :disabled="busy" type="email" id="loginUsername" name="email" placeholder="Minimum 3 characters"
-            class="form-control" aria-label="Email" v-model="username" required minlength="3" />
+            class="form-control" aria-label="Email" v-model="email" required minlength="3" />
         </div>
-        <div class="input-group mb-3 has-validation">
+        <div class="input-group has-validation">
           <label for="loginPassword"
             class="input-group-text user-select-none w-25 justify-content-center">Password</label>
           <input :disabled="busy" type="password" name="password" id="loginPassword" placeholder="Minimum 3 characters"
@@ -52,7 +52,7 @@
         </div>
       </template>
       <template #modal-footer>
-        <div class="text-danger">{{ loginError }}</div>
+        <div class="text-danger mx-auto">{{ loginError }}</div>
         <button type="submit" :disabled="busy" class="btn btn-primary" style="min-width: 30%;">
           <span v-if="busy">Logging you in...</span>
           <span v-else>Login</span>
@@ -74,7 +74,7 @@
           <input :disabled="busy" type="email" id="registerEmail" name="email" placeholder="Minimum 10 characters"
             class="form-control" aria-label="Email" v-model="email" required minlength="10" />
         </div>
-        <div class="input-group mb-3 has-validation">
+        <div class="input-group has-validation">
           <label for="registerPassword"
             class="input-group-text user-select-none w-25 justify-content-center">Password</label>
           <input :disabled="busy" type="password" name="password" id="registerPassword" placeholder="Minimum 3 characters"
@@ -82,7 +82,7 @@
         </div>
       </template>
       <template #modal-footer>
-        <div class="text-danger">{{ registerError }}</div>
+        <div class="text-danger mx-auto">{{ registerError }}</div>
         <button type="submit" :disabled="busy" class="btn btn-primary" style="min-width: 30%;">
           <span v-if="busy">Logging you in...</span>
           <span v-else>Register</span>
@@ -196,7 +196,7 @@ async function loginSubmit(ev) {
         return loginError.value = "Please fill out all fields.";
       busy.value = true;
       const res = await axios.post('/auth/login',
-        { email: username.value, password: password.value }
+        { email: email.value, password: password.value }
       );
       if (res.status != 200) {
         loginError.value = res?.data?.error;

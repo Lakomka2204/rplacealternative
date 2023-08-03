@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "nodemon src/server/main.js -w src/server",
-    "start": "node src/server/production.js",
+    "winstart": "SET NODE_ENV=production & node src/server/main.js",
+    "start": "node src/server/main.js",
     "build": "node src/server/build.js"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^6.8.1",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.1",
     "mongoose": "^7.4.1",

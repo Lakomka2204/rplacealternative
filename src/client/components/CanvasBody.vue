@@ -278,7 +278,7 @@ async function SC() {
   if (unauthorized.value)
     if (await checkauth())
       return;
-  const cPixel = pixels.value.find(z => z.position.x == currentCords.x && z.position.y == currentCords.y)
+  const cPixel = pixels.value.filter(z => z.position.x == currentCords.x && z.position.y == currentCords.y).pop()
   if (!cPixel) return Object.assign(selectedPixel, initPixelState);
   try {
     let cached;

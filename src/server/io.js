@@ -40,6 +40,12 @@ module.exports = {
             return socket.emit("placedresult", {
               msg: "You're on cooldown, wait a little bit.",
             });
+            if (user.ban.isBanned)
+          {
+            return socket.emit("placedresult",{
+              msg:"You're banned. Reason: "+user.ban.reason
+            })
+          }
           if (!availableColors[color])
             return socket.emit("placedresult", { msg: "Invalid color" });
           if (

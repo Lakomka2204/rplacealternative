@@ -7,3 +7,12 @@
 .hfooter{
     height: 3.5rem;
 }
+.footerelement {
+    width: 25%;
+}
+
+@media (min-width: 576px) {
+    .footerelement {
+        width: auto;
+    }
+}

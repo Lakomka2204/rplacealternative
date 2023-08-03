@@ -1,6 +1,6 @@
 <template>
     <footer class="container-fluid d-flex flex-row justify-content-between align-items-center hfooter">
-        <div class="copyright">Made by Lakomka</div>
+        <div class="footerelement">Made by Lakomka</div>
         <button class="btn btn-outline-primary btn-lg fw-bold" @click="placePixel()" :disabled="isBusy">{{ displayPlace
         }}</button>
         <div class="dropdown">

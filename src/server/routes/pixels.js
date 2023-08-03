@@ -11,12 +11,8 @@ router.get('/canvasinfo',(_req,res)=>{
 router.get('/canvascolors',(_req,res)=>{
   const colorsFile = path.join(__dirname,'..','colors.json');
   res.sendFile(colorsFile);
-  // res.sendStatus(404)
 });
 router.get("/getuser",authmiddleware, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  if (!user.emailVerified)
-    return res.status(403).json({error:"You need to verify your email."});
   const { x, y } = req.body;
   const pixel = await Pixel.findOne({ position: { x, y } });
   if (!pixel)
@@ -28,9 +24,7 @@ router.get("/getuser",authmiddleware, async (req, res) => {
   const placedUser = await User.findById(pixel.placedBy);
   if (!placedUser) return res.status(404).json({ error: "User not found." });
   res.json({
-      id: user._id,
-    username: user.username,
-    nickname: user.nickname,
+      id: placedUser._id,
   });
 });
 module.exports = router;
