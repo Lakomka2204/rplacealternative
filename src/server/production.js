@@ -24,15 +24,14 @@ app.use("/pixels", require("./routes/pixels"));
 app.use("/users", require("./routes/users"));
 app.use("/admin", require("./routes/admin"));
 const port = process.env.PORT || 3000;
-
-ViteExpress.build().then(async ()=> {
-  ViteExpress.config({mode:'production'});
-    const server = http.createServer(app);
-    app.use(ViteExpress.static());
-    const ioServer = createIOServer(server);
-    server.listen(port,() => {
-      console.log("PROD Server is listening on port %d...", port);
-    })
-    await ViteExpress.bind(app,ioServer,() => console.log('bind'));
-});
-    
+ViteExpress.config({ mode: 'production' });
+const server = http.createServer(app);
+app.use(ViteExpress.static());
+const ioServer = createIOServer(server);
+server.listen(port, () => {
+  console.log("PROD Server is listening on port %d...", port);
+})
+async function startServer() {
+  await ViteExpress.bind(app, ioServer);
+}
+startServer();

@@ -1,14 +1,12 @@
 <template>
     <footer class="container-fluid d-flex flex-row justify-content-between align-items-center hfooter">
-        <div>Made by Lakomka</div>
+        <div class="copyright">Made by Lakomka</div>
         <button class="btn btn-outline-primary btn-lg fw-bold" @click="placePixel()" :disabled="isBusy">{{ displayPlace
         }}</button>
         <div class="dropdown">
             <button class="dropdown-toggle btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"
-                aria-expanded="false">Current color:
-                <span :style="getBtnColor(current)">{{ current.name }}</span>
-                <br>
-                Choose color</button>
+                aria-expanded="false">Color
+                <span :style="getBtnColor(current)">{{ current.name }}</span></button>
             <ul class="dropdown-menu">
                 <li v-for="color of colors" :key="color.color">
                     <button :disabled="!color?.color" class="dropdown-item" :style="getBtnColor(color)" type="button"

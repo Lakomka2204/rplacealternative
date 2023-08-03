@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "nodemon src/server/main.js -w src/server",
     "start": "node src/server/production.js",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "node src/server/build.js"
   },
   "dependencies": {
     "axios": "^1.4.0",
