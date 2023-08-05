@@ -90,6 +90,10 @@ onMounted(async () => {
       showToast({ message: res.msg, type: "warn" });
     }
   });
+  socket.on('pong',() => {
+    console.timeLog('ping')
+    ping.value = start - Date.now();
+  });
   // init requests
   const res = await axios.get('/pixels/canvasinfo');
   canvasSize.x = +res.data.w;
@@ -111,12 +115,14 @@ const socket = io(`ws://`, {
   path: '/ws',
   reconnectionAttempts: 10,
 });
+let start;
+
 function checkPing()
 {
-  const start = Date.now();
-  socket.emit('ping',() => {
-    ping.value = start - Date.now();
-  });
+  console.time('ping')
+  start = Date.now();
+  socket.emit('ping');
+  
 }
 function ppWrap(ev) {
   if (placePixel(ev))

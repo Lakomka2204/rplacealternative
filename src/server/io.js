@@ -25,8 +25,9 @@ module.exports = {
     io.on("connection", async (socket) => {
       socket.broadcast.emit("online", io.engine.clientsCount);
       const initpixels = await Pixel.find({});
-      socket.on('ping',(callback)=>{
-        callback();
+      socket.on('ping',()=>{
+        console.log('receiving rat on the moon');
+        socket.emit('pong');
       })
       socket.emit("initdata", {
         online: io.engine.clientsCount,
