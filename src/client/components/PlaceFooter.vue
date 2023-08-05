@@ -1,6 +1,6 @@
 <template>
     <footer class="container-fluid d-flex flex-row justify-content-between align-items-center hfooter">
-        <div class="footerelement">Made by Lakomka</div>
+        <div class="footerelement"><a href="https://github.com/Lakomka2204/rplacealternative" target="_blank">Github</a></div>
         <button class="btn btn-outline-primary btn-lg fw-bold" @click="placePixel()" :disabled="isBusy">{{ displayPlace
         }}</button>
         <div class="dropdown">

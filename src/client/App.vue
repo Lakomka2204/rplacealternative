@@ -15,7 +15,14 @@ const cooldown = ref(10);
 const pixels = ref([]);
 const online = ref();
 const isLoggedIn = toRef(() => navbar.value.isLoggedIn);
-
+const ping = ref(0);
+// 0 - idle
+// 1 - connecting
+// 2 - connected
+// 3 - connect error
+// 4 - reconnected
+// 5 - reconnect error
+const socketConnectionStatus = ref(0);
 const canvasSize = reactive({
   x: -1,
   y: -1
@@ -53,6 +60,19 @@ onMounted(async () => {
     );
   });
   //socket setup
+  socket.on('connect',() => socketConnectionStatus.value = 2);
+  socket.on('connect_error',(err) =>{
+    socketConnectionStatus.value = 3;
+    console.error('socket error',err);
+  });
+  socket.on('reconnect',(n) => {
+    socketConnectionStatus.value =4;
+  });
+  socket.on('reconnect_error' ,(err) => {
+    socketConnectionStatus.value = 5;
+    console.error('socket error',err);
+  });
+  socket.on('reconnect_failed', () => socketConnectionStatus.value = 0);
   socket.on('initdata', data => {
     online.value = data.online;
     pixels.value = data.pixels;
@@ -86,9 +106,18 @@ onMounted(async () => {
     }
   });
 });
+
 const socket = io(`ws://`, {
   path: '/ws',
+  reconnectionAttempts: 10,
 });
+function checkPing()
+{
+  const start = Date.now();
+  socket.emit('ping',() => {
+    ping.value = start - Date.now();
+  });
+}
 function ppWrap(ev) {
   if (placePixel(ev))
     footer.value.releaseButton();
@@ -113,7 +142,7 @@ function setCoords(ev) {
 </script>
 
 <template>
-  <Navbar :online="online" @toast="showToast" :coords="currentCords" ref="navbar" />
+  <Navbar :online="online" @toast="showToast" :coords="currentCords" ref="navbar" :conStatus="socketConnectionStatus" @socketping="checkPing()" :ping="ping"/>
   <CanvasBody :pixels="pixels" ref="bodyRef" :cvsx="canvasSize.x" :cvsy="canvasSize.y" @changeCurrent="setCoords" @toast="showToast"/>
   <PlaceFooter  @placed="ppWrap" :cooldown="cooldown" ref="footer" />
   <ToastHandler ref="toastHandler" />

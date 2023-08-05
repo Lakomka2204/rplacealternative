@@ -8,6 +8,9 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-3">
+          <li class="nav-item btn" id="pingpopover" @click="togglePingPopover" data-bs-toggle="popover" data-bs-title="Server ping" :data-bs-content="`Ping: ${ping}ms`">
+            Connection: {{ connectionStatus }}
+          </li>
           <li class="nav-item">
             Coordinates ( X: {{ props.coords.x }} Y: {{ props.coords.y }} )
           </li>
@@ -106,14 +109,29 @@ const busy = ref(false);
 const isLoggedIn = ref(false);
 const isAdmin = ref(false);
 const isDarkTheme = ref(false);
+const SocketStatus = ['Idle','Connecting','Connected','Con Error','Reconnected','Recon Error'];
+const connectionStatus = ref(SocketStatus[0]);
+watch(() => props.conStatus,(newStatus) => {
+  connectionStatus.value = SocketStatus[newStatus];
+});
 let loginModal, regModal;
 const lModalId = "loginModal";
 const rModalId = 'registerModal';
-const emit = defineEmits(['toast']);
+const emit = defineEmits(['toast','socketping']);
+const ping = toRef(() => props.ping);
 const props = defineProps({
   online: Number,
-  coords:Object
+  coords:Object,
+  conStatus:Number,
+  ping:Number
 });
+let toggle = false;
+function togglePingPopover()
+{
+  toggle = !toggle;
+  if (toggle)
+  emit('socketping');
+}
 async function resCD()
 {
   try{
