@@ -26,7 +26,6 @@ module.exports = {
       socket.broadcast.emit("online", io.engine.clientsCount);
       const initpixels = await Pixel.find({});
       socket.on('ping',()=>{
-        console.log('receiving rat on the moon');
         socket.emit('pong');
       })
       socket.emit("initdata", {

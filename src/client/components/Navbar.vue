@@ -8,7 +8,7 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-3">
-          <li class="nav-item btn" id="pingpopover" @click="togglePingPopover" data-bs-toggle="popover" data-bs-title="Server ping" :data-bs-content="`Ping: ${ping}ms`">
+          <li class="nav-item btn" id="pingpopover" @click="togglePingPopover" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content="Calculating">
             Connection: {{ connectionStatus }}
           </li>
           <li class="nav-item">
@@ -113,12 +113,17 @@ const SocketStatus = ['Idle','Connecting','Connected','Con Error','Reconnected',
 const connectionStatus = ref(SocketStatus[0]);
 watch(() => props.conStatus,(newStatus) => {
   connectionStatus.value = SocketStatus[newStatus];
+  socketerror = [3,5].includes(newStatus);
 });
+let socketerror = false;
 let loginModal, regModal;
 const lModalId = "loginModal";
 const rModalId = 'registerModal';
 const emit = defineEmits(['toast','socketping']);
-const ping = toRef(() => props.ping);
+watch(()=> props.ping,(newPing) => {
+  setPopoverText(`Ping: ${newPing}ms`);
+});
+
 const props = defineProps({
   online: Number,
   coords:Object,
@@ -126,11 +131,23 @@ const props = defineProps({
   ping:Number
 });
 let toggle = false;
+function setPopoverText(text)
+{
+  const popover = bootstrap.Popover.getInstance('#pingpopover');
+  popover.setContent({
+    '.popover-body':text
+  })
+}
 function togglePingPopover()
 {
+  if (socketerror)
+    return setPopoverText('Connection error');
   toggle = !toggle;
   if (toggle)
   emit('socketping');
+else {
+  setPopoverText("Calculating")
+}
 }
 async function resCD()
 {

@@ -91,8 +91,8 @@ onMounted(async () => {
     }
   });
   socket.on('pong',() => {
-    console.timeLog('ping')
-    ping.value = start - Date.now();
+    console.timeEnd('ping')
+    ping.value = Date.now() - start;
   });
   // init requests
   const res = await axios.get('/pixels/canvasinfo');

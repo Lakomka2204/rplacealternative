@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "nodemon src/server/main.js -w src/server",
+    "lindev":"NODE_ENV=development & node src/server/main.js",
     "winstart": "SET NODE_ENV=production & node src/server/main.js",
     "start": "node src/server/main.js",
     "build": "node src/server/build.js"
