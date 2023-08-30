@@ -53,19 +53,14 @@
           <input :disabled="busy" type="password" name="password" id="loginPassword" placeholder="Minimum 3 characters"
             class="form-control" aria-label="Username" v-model="password" required minlength="3" />
         </div>
-        <div class="d-flex gap-2">
-
-          <label class="mb-3 user-select-none justify-content-center">
-            Or login using
-          </label>
-          <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-html="true"
-          data-bs-title="After logging in with 3rd party accounts the authorization tokens <strong>will be revoked immediately</strong><br>Default scopes for accounts are <ul><li>Email</li><li>Primary name</li><li>ID</li><ul>"></i>
-        </div>
-          <div class="input-group mb-3">
-            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/oauth/discord">Discord</a>
-        </div>
         <div class="input-group mb-3">
-          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/oauth/google">Google</a>
+          <label class="input-group-text user-select-none justify-content-center gap-2">
+            Or login using
+            <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-html="true"
+          :data-bs-title="thirdpartywarning"></i>
+          </label>
+            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none discord-color" href="/oauth/discord">Discord</a>
+            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none google-color" href="/oauth/google">Google</a>
         </div>
       </template>
       <template #modal-footer>
@@ -91,11 +86,24 @@
           <input :disabled="busy" type="email" id="registerEmail" name="email" placeholder="Minimum 10 characters"
             class="form-control" aria-label="Email" v-model="email" required minlength="10" />
         </div>
-        <div class="input-group has-validation">
+        <div class="input-group mb-3 has-validation">
           <label for="registerPassword"
             class="input-group-text user-select-none w-25 justify-content-center">Password</label>
           <input :disabled="busy" type="password" name="password" id="registerPassword" placeholder="Minimum 3 characters"
             class="form-control" aria-label="Username" v-model="password" required minlength="3" />
+        </div>
+        <div class="d-flex gap-2">
+          <label class="mb-3 user-select-none justify-content-center">
+            Create account using 
+          </label>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-html="true"
+          :data-bs-title="thirdpartywarning"></i>
+        </div>
+          <div class="input-group mb-3">
+            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none discord-color" href="/oauth/discord">Discord</a>
+        </div>
+        <div class="input-group mb-3">
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none google-color" href="/oauth/google">Google</a>
         </div>
       </template>
       <template #modal-footer>
@@ -123,6 +131,15 @@ const busy = ref(false);
 const isLoggedIn = ref(false);
 const isAdmin = ref(false);
 const isDarkTheme = ref(false);
+const thirdpartywarning = ref(`After logging in with 3rd party accounts the authorization tokens 
+<strong>will be revoked immediately</strong>
+<br>
+Default scopes for account: 
+<ul>
+  <li>Account ID</li>
+  <li>Account Email</li>
+  <li>Primary name</li>
+  </ul>`)
 const SocketStatus = ['Idle','Connecting','Connected','Con Error','Reconnected','Recon Error'];
 const connectionStatus = ref(SocketStatus[0]);
 watch(() => props.conStatus,(newStatus) => {
@@ -287,3 +304,15 @@ async function loginSubmit(ev) {
 }
 
 </script>
+
+<style lang="scss" scoped>
+.discord-color {
+    background-color: #5865F2;
+    color: var(--bs-white);
+}
+.google-color {
+  background-color: #4285F4;
+  color: var(--bs-white);
+}
+
+</style>
