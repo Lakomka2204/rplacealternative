@@ -43,6 +43,16 @@ router.get("/discord-token", async (req, res) => {
         }
       );
       const { id, username, email } = userInfo.data;
+      const revokeTokenData = new URLSearchParams({
+        client_id: process.env.DISCORD_CLIENT_ID,
+        client_secret: process.env.DISCORD_CLIENT_SECRET,
+        token: accessToken,
+      });
+      const response = await axios.post('https://discord.com/api/oauth2/token/revoke',revokeTokenData,{
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      });
       const user = await User.findOne({ discordId: id });
       let token;
       if (user)
