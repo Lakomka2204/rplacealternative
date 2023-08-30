@@ -53,14 +53,19 @@
           <input :disabled="busy" type="password" name="password" id="loginPassword" placeholder="Minimum 3 characters"
             class="form-control" aria-label="Username" v-model="password" required minlength="3" />
         </div>
+        <div class="d-flex gap-2">
+
           <label class="mb-3 user-select-none justify-content-center">
             Or login using
           </label>
-        <div class="input-group mb-3">
-          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/auth/discord">Discord</a>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-html="true"
+          data-bs-title="After logging in with 3rd party accounts the authorization tokens <strong>will be revoked immediately</strong><br>Default scopes for accounts are <ul><li>Email</li><li>Primary name</li><li>ID</li><ul>"></i>
+        </div>
+          <div class="input-group mb-3">
+            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/oauth/discord">Discord</a>
         </div>
         <div class="input-group mb-3">
-          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/auth/google">Google</a>
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/oauth/google">Google</a>
         </div>
       </template>
       <template #modal-footer>
@@ -195,34 +200,19 @@ onMounted(async() => {
   isDarkTheme.value = Cookies.get('theme') === 'true' || false;
   // check code authorization
   const url = new URL(window.location);
-  const authCode = url.searchParams.get('code');
-  const error = url.searchParams.get('error');
-  const errordesc = url.searchParams.get('error_description');
+  const oauthUsername = url.searchParams.get('lu');
+  const loginMethod = url.searchParams.get('lm');
+  const error = url.searchParams.get("error");
   if (error)
   {
-    emit('toast',{message: errordesc, type:'warn'});
     window.history.replaceState({},'','/');
-
+    setTimeout(() => emit('toast', { message: error, type: 'error' }),500);
   }
-  if (authCode)
+  if (oauthUsername)
   {
-
-    try{
-      
-      const res = await axios.post('/auth/discord',{
-        code: authCode
-      });
-      Cookies.set('u',res.headers.getAuthorization(),{sameSite:'Strict',expires:7});
-      emit('toast', { message: 'Logged in via discord '+res.data.username, type: 'success' });
-    }
-    catch(err){
-      emit('toast',{message: err.data.error || err.message || "Something malicious is brewing...", type: 'error'});
-    }
-    finally{
-      window.history.replaceState({},'','/');
-    }
+    window.history.replaceState({},'','/');
+    setTimeout(() => emit('toast', { message: `Logged in via ${loginMethod}. Welcome ${oauthUsername}`, type: 'success' }),500);
   }
-  
   await checkUser();
   loginModal = new bootstrap.Modal(document.getElementById(lModalId));
   regModal = new bootstrap.Modal(document.getElementById(rModalId));

@@ -36,10 +36,10 @@ const associations = {
     'error':'text-bg-danger'
 }
 function show(msg, type) {
-    // console.log('show received',msg,type);
+    console.log('show received',msg,type);
     if (!DOMReady.value) return;
     if (!['info', 'success', 'warn', 'error'].includes(type))
-    type = 'info';
+      type = 'info';
     if (toast.isShown())
     toast.hide();
     doc.setAttribute('type',type);

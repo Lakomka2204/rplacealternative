@@ -27,6 +27,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan("tiny"));
 app.use("/auth", ratelimit.rateLimit(), require("./routes/auth"));
+app.use("/oauth",ratelimit.rateLimit(),require('./routes/oauth'));
 app.use("/pixels", require("./routes/pixels"));
 app.use("/users", require("./routes/users"));
 app.use("/admin", require("./routes/admin"));
