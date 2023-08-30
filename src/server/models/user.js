@@ -49,6 +49,14 @@ const User = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
+    discordId:{
+      type:String,
+      required: false,
+    },
+    googleId: {
+      type:String,
+      required: false,
+    }
   }, {
     timestamps: true,
   });

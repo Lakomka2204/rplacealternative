@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container">
-      <a class="navbar-brand" href="#">r/place Alternative</a>
+      <a class="navbar-brand" href="/">r/place Alternative</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -47,11 +47,20 @@
           <input :disabled="busy" type="email" id="loginUsername" name="email" placeholder="Minimum 3 characters"
             class="form-control" aria-label="Email" v-model="email" required minlength="3" />
         </div>
-        <div class="input-group has-validation">
+        <div class="input-group mb-3 has-validation">
           <label for="loginPassword"
             class="input-group-text user-select-none w-25 justify-content-center">Password</label>
           <input :disabled="busy" type="password" name="password" id="loginPassword" placeholder="Minimum 3 characters"
             class="form-control" aria-label="Username" v-model="password" required minlength="3" />
+        </div>
+          <label class="mb-3 user-select-none justify-content-center">
+            Or login using
+          </label>
+        <div class="input-group mb-3">
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/auth/discord">Discord</a>
+        </div>
+        <div class="input-group mb-3">
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none" href="/auth/google">Google</a>
         </div>
       </template>
       <template #modal-footer>
@@ -184,6 +193,36 @@ async function checkUser()
 }
 onMounted(async() => {
   isDarkTheme.value = Cookies.get('theme') === 'true' || false;
+  // check code authorization
+  const url = new URL(window.location);
+  const authCode = url.searchParams.get('code');
+  const error = url.searchParams.get('error');
+  const errordesc = url.searchParams.get('error_description');
+  if (error)
+  {
+    emit('toast',{message: errordesc, type:'warn'});
+    window.history.replaceState({},'','/');
+
+  }
+  if (authCode)
+  {
+
+    try{
+      
+      const res = await axios.post('/auth/discord',{
+        code: authCode
+      });
+      Cookies.set('u',res.headers.getAuthorization(),{sameSite:'Strict',expires:7});
+      emit('toast', { message: 'Logged in via discord '+res.data.username, type: 'success' });
+    }
+    catch(err){
+      emit('toast',{message: err.data.error || err.message || "Something malicious is brewing...", type: 'error'});
+    }
+    finally{
+      window.history.replaceState({},'','/');
+    }
+  }
+  
   await checkUser();
   loginModal = new bootstrap.Modal(document.getElementById(lModalId));
   regModal = new bootstrap.Modal(document.getElementById(rModalId));

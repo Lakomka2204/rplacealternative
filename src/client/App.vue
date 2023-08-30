@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, reactive, toRef, watch } from "vue";
+import { onMounted, ref, reactive, toRef, watch} from "vue";
 import Navbar from "./components/Navbar.vue";
 import { io } from 'socket.io-client';
 import PlaceFooter from './components/PlaceFooter.vue';
