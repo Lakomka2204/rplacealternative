@@ -12,6 +12,7 @@ module.exports = (req, res, next) => {
       {
         tokenUser.ban.isBanned = false;
         tokenUser.ban.reason = null;
+        await tokenUser.save();
       }
     if (tokenUser.ban.isBanned)
       return res.status(401).json({error: "You are banned. Reason: "+tokenUser.ban.reason});

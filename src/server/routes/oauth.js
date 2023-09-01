@@ -14,8 +14,11 @@ const googleoauthClient = new google.auth.OAuth2({
 router.get("/discord-token", async (req, res) => {
   try {
     const { code, error, error_description } = req.query;
-    if (error) return res.status(401).json({ error: error_description });
-    if (!code) return res.status(400).json({ error: "No authorization code" });
+    const errData = new URLSearchParams();
+    errData.append;
+    if (error) errData.append("error", error_description);
+    if (!code) errData.append("error", "No authorization code");
+    if (errData.has("error")) return res.redirect("/?" + errData.toString());
     const tokenData = new URLSearchParams({
       client_id: process.env.DISCORD_CLIENT_ID,
       client_secret: process.env.DISCORD_CLIENT_SECRET,
@@ -48,26 +51,31 @@ router.get("/discord-token", async (req, res) => {
         client_secret: process.env.DISCORD_CLIENT_SECRET,
         token: accessToken,
       });
-      const response = await axios.post('https://discord.com/api/oauth2/token/revoke',revokeTokenData,{
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      });
-      const user = await User.findOne({ discordId: id });
-      let token;
-      if (user)
-      {
-        if (user.ban.isBanned)
+      await axios.post(
+        "https://discord.com/api/oauth2/token/revoke",
+        revokeTokenData,
         {
-          const redirParams = new URLSearchParams({ error: "You are banned. Reason: " + user.ban.reason });
-          return res.redirect('/?'+redirParams.toString());
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+      const user = await User.findOne({ email });
+      let token;
+      if (user) {
+        // if (user.ban.isBanned) {
+        //   errData.append("error", "You are banned. Reason: " + user.ban.reason);
+        //   return res.redirect("/?" + errData.toString());
+        // }
+        if (!user.discordId){
+          user.discordId = id;
+          await user.save();
         }
         token = jwt.sign(
           { id: user._id, email: user.email, pwd: user.password },
           process.env.JWTSECRET
-          );
-        }
-      else {
+        );
+      } else {
         const newUser = new User({
           discordId: id,
           username,
@@ -119,32 +127,34 @@ router.get("/google-token", async (req, res) => {
     const { code, error } = req.query;
     if (error) return res.status(401).json({ error });
     if (!code) return res.status(400).json({ error: "Code is missing" });
-    const {tokens} = await googleoauthClient.getToken(code)
+    const { tokens } = await googleoauthClient.getToken(code);
     googleoauthClient.setCredentials(tokens);
     const data = google.oauth2({
       responseType: "json",
       version: "v2",
-      auth: googleoauthClient
+      auth: googleoauthClient,
     });
     const userInfo = await data.userinfo.get();
-    console.log("GOOGLE DATA", userInfo.data);
     const { id, email, name } = userInfo.data;
     await googleoauthClient.revokeToken(tokens.access_token);
-    const user = await User.findOne({ googleId: id });
+    const user = await User.findOne({ email });
     let token;
-    if (user)
-    {
-      if (user.ban.isBanned)
-        {
-          const redirParams = new URLSearchParams({ error: "You are banned. Reason: " + user.ban.reason });
-          return res.redirect('/?'+redirParams.toString());
-        }
+    if (user) {
+      // if (user.ban.isBanned) {
+      //   const redirParams = new URLSearchParams({
+      //     error: "You are banned. Reason: " + user.ban.reason,
+      //   });
+      //   return res.redirect("/?" + redirParams.toString());
+      // }
+      if (!user.googleId) {
+        user.googleId = id;
+        await user.save();
+      }
       token = jwt.sign(
         { id: user._id, email: user.email, pwd: user.password },
         process.env.JWTSECRET
-        );
-      }
-    else {
+      );
+    } else {
       const newUser = new User({
         googleId: id,
         username: name,
@@ -163,14 +173,15 @@ router.get("/google-token", async (req, res) => {
       );
     }
     if (token)
-        res.cookie('u',token,{
-            sameSite: 'strict', maxAge: 1000*60*60*24*7,
-        });
-        const redirParams = new URLSearchParams({
-            lu: name,
-            lm: 'google'
-        })
-        res.redirect('/?'+redirParams.toString());
+      res.cookie("u", token, {
+        sameSite: "strict",
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      });
+    const redirParams = new URLSearchParams({
+      lu: name,
+      lm: "google",
+    });
+    res.redirect("/?" + redirParams.toString());
   } catch (err) {
     console.error("google auth error", err);
     const redirParams = new URLSearchParams({

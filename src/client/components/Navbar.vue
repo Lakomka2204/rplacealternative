@@ -8,7 +8,8 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-3">
-          <li class="nav-item btn" id="pingpopover" @click="togglePingPopover" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content="Calculating">
+          <li class="nav-item btn" id="pingpopover" @click="togglePingPopover" data-bs-toggle="popover"
+            data-bs-placement="bottom" data-bs-content="Calculating">
             Connection: {{ connectionStatus }}
           </li>
           <li class="nav-item">
@@ -27,7 +28,8 @@
               Account
             </a>
             <ul class="dropdown-menu">
-            <li v-if="isAdmin"><button class="dropdown-item" @click="resCD()">Reset cooldown</button></li>
+              <li v-if="isAdmin"><button class="dropdown-item" @click="resCD()">Reset cooldown</button></li>
+              <li v-if="isLoggedIn"><a class="dropdown-item" href="#" @click="getAccountInfo()">Account</a></li>
               <li v-if="isLoggedIn"><a class="dropdown-item text-danger" href="#" @click="logout">Logout</a></li>
               <div v-else>
                 <li><button class="dropdown-item" @click="loginModal.show()">Login</button></li>
@@ -39,6 +41,28 @@
       </div>
     </div>
   </nav>
+  <Modal v-if="isLoggedIn" title="Account info" :id="accountModalId">
+    <template #modal-body>
+      <div v-if="accountInfo.id"
+        v-for="accountProp in Object.keys(accountInfo).filter(x => !['isBanned', 'integrations'].includes(x))"
+        class="row gap-3">
+        <label class="col-sm-2 col-form-label text-secondary w-25" :for="'userInfo-' + accountProp">
+          <small>{{ userInfoLabels[accountProp] }}</small>
+        </label>
+        <input :id="'userInfo-' + accountProp" readonly class="form-control-plaintext w-auto flex-grow-1"
+          :value="accountInfo[accountProp]" />
+      </div>
+      <div class="container d-flex" v-else>
+        <div class="spinner-border mx-auto align-self-center" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+    </template>
+    <template #modal-footer>
+      <button class="btn btn-secondary" data-bs-dismiss="modal" :data-bs-target="accountModalId">Close</button>
+    </template>
+  </Modal>
   <form class="needs-validation" novalidate @submit.prevent="loginSubmit">
     <Modal :id="lModalId" title="Login to the account">
       <template #modal-body>
@@ -57,10 +81,12 @@
           <label class="input-group-text user-select-none justify-content-center gap-2">
             Or login using
             <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-html="true"
-          :data-bs-title="thirdpartywarning"></i>
+              :data-bs-title="thirdpartywarning"></i>
           </label>
-            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none discord-color" href="/oauth/discord">Discord</a>
-            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none google-color" href="/oauth/google">Google</a>
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none discord-color"
+            href="/oauth/discord">Discord</a>
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none google-color"
+            href="/oauth/google">Google</a>
         </div>
       </template>
       <template #modal-footer>
@@ -94,16 +120,18 @@
         </div>
         <div class="d-flex gap-2">
           <label class="mb-3 user-select-none justify-content-center">
-            Create account using 
+            Create account using
           </label>
           <i class="bi bi-info-circle" data-bs-toggle="tooltip" data-bs-html="true"
-          :data-bs-title="thirdpartywarning"></i>
-        </div>
-          <div class="input-group mb-3">
-            <a :disabled="busy" type="button" class="form-control text-center text-decoration-none discord-color" href="/oauth/discord">Discord</a>
+            :data-bs-title="thirdpartywarning"></i>
         </div>
         <div class="input-group mb-3">
-          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none google-color" href="/oauth/google">Google</a>
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none discord-color"
+            href="/oauth/discord">Discord</a>
+        </div>
+        <div class="input-group mb-3">
+          <a :disabled="busy" type="button" class="form-control text-center text-decoration-none google-color"
+            href="/oauth/google">Google</a>
         </div>
       </template>
       <template #modal-footer>
@@ -119,9 +147,16 @@
 
 <script setup>
 import Cookies from 'js-cookie';
-import { toRef, watch, ref, onMounted } from 'vue';
+import { toRef, watch, ref, onMounted, reactive } from 'vue';
 import Modal from "./Modal.vue";
 import axios from 'axios';
+const userInfoLabels = {
+  id: "ID",
+  username: "Username",
+  role: "Type",
+  email: "Email",
+  createdAt: "Registration date",
+}
 const username = ref();
 const password = ref();
 const email = ref();
@@ -140,103 +175,117 @@ Default scopes for account:
   <li>Account Email</li>
   <li>Primary name</li>
   </ul>`)
-const SocketStatus = ['Idle','Connecting','Connected','Con Error','Reconnected','Recon Error'];
+const SocketStatus = ['Idle', 'Connecting', 'Connected', 'Con Error', 'Reconnected', 'Recon Error'];
+const initAccountInfo = {
+  id: null,
+  username: null,
+  email: null,
+  role: null,
+  integrations: [],
+  createdAt: new Date(0),
+}
+const accountInfo = reactive({ ...initAccountInfo })
 const connectionStatus = ref(SocketStatus[0]);
-watch(() => props.conStatus,(newStatus) => {
+watch(() => props.conStatus, (newStatus) => {
   connectionStatus.value = SocketStatus[newStatus];
-  socketerror = [3,5].includes(newStatus);
+  socketerror = [3, 5].includes(newStatus);
 });
 let socketerror = false;
-let loginModal, regModal;
+let loginModal, regModal, accountModal;
 const lModalId = "loginModal";
 const rModalId = 'registerModal';
-const emit = defineEmits(['toast','socketping']);
-watch(()=> props.ping,(newPing) => {
+const accountModalId = 'myaccountModal';
+
+const emit = defineEmits(['toast', 'socketping']);
+watch(() => props.ping, (newPing) => {
   setPopoverText(`Ping: ${newPing}ms`);
 });
 
 const props = defineProps({
   online: Number,
-  coords:Object,
-  conStatus:Number,
-  ping:Number
+  coords: Object,
+  conStatus: Number,
+  ping: Number
 });
 let toggle = false;
-function setPopoverText(text)
-{
+function getAccountInfo() {
+  accountModal.show();
+}
+function setPopoverText(text) {
   const popover = bootstrap.Popover.getInstance('#pingpopover');
   popover.setContent({
-    '.popover-body':text
+    '.popover-body': text
   })
 }
-function togglePingPopover()
-{
+function togglePingPopover() {
   if (socketerror)
     return setPopoverText('Connection error');
   toggle = !toggle;
   if (toggle)
-  emit('socketping');
-else {
-  setPopoverText("Calculating")
+    emit('socketping');
+  else {
+    setPopoverText("Calculating")
+  }
 }
-}
-async function resCD()
-{
-  try{
+async function resCD() {
+  try {
     const res = await axios.patch('/admin/resetcooldown');
     if (res.status == 200)
-    emit('toast',{message:'Cooldown has been reset. Reload the page.',type:'success'})
+      emit('toast', { message: 'Cooldown has been reset. Reload the page.', type: 'success' })
   }
-  catch(err){
+  catch (err) {
     console.error(err);
-    emit('toast',{message:err?.response?.data?.error || err.message,type:'error'});
+    emit('toast', { message: err?.response?.data?.error || err?.response?.data || err.message, type: 'error' });
   }
 }
 function logout(ev) {
   Cookies.remove('u', { sameSite: 'Strict' });
   isLoggedIn.value = false;
-  isAdmin.value=false;
-  emit('toast',{message:'You logged out.',type:'info'})
+  isAdmin.value = false;
+  emit('toast', { message: 'You logged out.', type: 'info' })
 }
-defineExpose({isLoggedIn});
-async function checkUser()
-{
-  try{
+defineExpose({ isLoggedIn });
+
+async function checkUser() {
+  try {
     if (Cookies.get('u')) {
       const res = await axios.get('/users/me');
+      for (let resProp of Object.keys(res.data)) {
+        if (userInfoLabels[resProp])
+          accountInfo[resProp] = res.data[resProp]
+      }
       isLoggedIn.value = res?.data?.id != undefined;
       isAdmin.value = res.data.role == 'admin';
     }
   }
   catch
   {
-    emit('toast',{message:"Error fetching user. Please clear your cache or relog.",type:'error'});
+    emit('toast', { message: "Error fetching user. Please clear your cache or relog.", type: 'error' });
   }
 }
-onMounted(async() => {
+onMounted(async () => {
   isDarkTheme.value = Cookies.get('theme') === 'true' || false;
   // check code authorization
   const url = new URL(window.location);
   const oauthUsername = url.searchParams.get('lu');
   const loginMethod = url.searchParams.get('lm');
   const error = url.searchParams.get("error");
-  if (error)
-  {
-    window.history.replaceState({},'','/');
-    setTimeout(() => emit('toast', { message: error, type: 'error' }),500);
+  if (error) {
+    window.history.replaceState({}, '', '/');
+    setTimeout(() => emit('toast', { message: error, type: 'error' }), 500);
   }
-  if (oauthUsername)
-  {
-    window.history.replaceState({},'','/');
-    setTimeout(() => emit('toast', { message: `Logged in via ${loginMethod}. Welcome ${oauthUsername}`, type: 'success' }),500);
+  if (oauthUsername) {
+    window.history.replaceState({}, '', '/');
+    setTimeout(() => emit('toast', { message: `Logged in via ${loginMethod}. Welcome ${oauthUsername}`, type: 'success' }), 500);
   }
   await checkUser();
   loginModal = new bootstrap.Modal(document.getElementById(lModalId));
   regModal = new bootstrap.Modal(document.getElementById(rModalId));
+  accountModal = new bootstrap.Modal(document.getElementById(accountModalId));
 });
 watch(isDarkTheme, (newTheme) => {
   document.documentElement.setAttribute('data-bs-theme', newTheme ? "dark" : "light");
-  Cookies.set('theme', newTheme, { sameSite: "Strict", expires: 7});
+  Cookies.set('theme', newTheme, { sameSite: "Strict", expires: 7 });
 });
 
 async function registerSubmit(ev) {
@@ -248,7 +297,7 @@ async function registerSubmit(ev) {
     const res = await axios.post('/auth/register', {
       username: username.value, email: email.value, password: password.value
     })
-    Cookies.set('u', res.headers.getAuthorization(), { sameSite: 'Strict', expires: 7});
+    Cookies.set('u', res.headers.getAuthorization(), { sameSite: 'Strict', expires: 7 });
     isLoggedIn.value = res.status == 201;
     if (isLoggedIn.value) {
       console.log('reg suc');
@@ -261,7 +310,7 @@ async function registerSubmit(ev) {
     return !registerError;
   }
   catch (err) {
-    registerError.value = err?.response?.data?.error || err?.message || "Something unexpected happened";
+    registerError.value = err?.response?.data?.error || err?.response?.data || err?.message || "Something unexpected happened";
   }
   finally {
     busy.value = false;
@@ -270,7 +319,7 @@ async function registerSubmit(ev) {
 async function loginSubmit(ev) {
   try {
     loginError.value = '';
-    let uname="...";
+    let uname = "...";
     if (!isLoggedIn.value) {
 
       if (!ev.target.checkValidity())
@@ -283,12 +332,12 @@ async function loginSubmit(ev) {
         loginError.value = res?.data?.error;
       }
       uname = res.data.username;
-      Cookies.set('u', res.headers.getAuthorization(), { sameSite: 'Strict', expires: 7});
+      Cookies.set('u', res.headers.getAuthorization(), { sameSite: 'Strict', expires: 7 });
       isLoggedIn.value = res.status == 200;
     }
     if (isLoggedIn.value) {
       loginModal.hide();
-      emit('toast', { message: 'Logged in as '+uname, type: 'success' });
+      emit('toast', { message: 'Logged in as ' + uname, type: 'success' });
       ev.target.classList.remove('was-validated');
     }
     username.value = email.value = password.value = '';
@@ -296,7 +345,7 @@ async function loginSubmit(ev) {
     return !loginError;
   }
   catch (err) {
-    loginError.value = err?.response?.data?.error || err?.message || "Something unexpected happened";
+    loginError.value = err?.response?.data?.error || err?.response?.data || err?.message || "Something unexpected happened";
   }
   finally {
     busy.value = false;
@@ -307,12 +356,12 @@ async function loginSubmit(ev) {
 
 <style lang="scss" scoped>
 .discord-color {
-    background-color: #5865F2;
-    color: var(--bs-white);
+  background-color: #5865F2;
+  color: var(--bs-white);
 }
+
 .google-color {
   background-color: #4285F4;
   color: var(--bs-white);
 }
-
 </style>

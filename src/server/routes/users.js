@@ -8,17 +8,30 @@ router.get("/me", authmiddle, async (req, res) => {
     return res
       .status(404)
       .json({ error: `User with id ${req.user.id} not found.` });
+  const integrations = []
+  if (dbUser.googleId)
+    integrations.push('google');
+  if (dbUser.discordId)
+    integrations.push('discord');
   res.json({
     id: dbUser._id,
-    email: dbUser.email,
+    email: censorEmail(dbUser.email),
     role: dbUser.privileges,
     username: dbUser.username,
     createdAt: dbUser.createdAt,
     emailVerified: dbUser.emailVerified,
     isBanned: dbUser.ban.isBanned,
     cooldown: dbUser.placeCooldown,
+    integrations
   });
 });
+function censorEmail(email)
+{
+  const [name, provider] = email.split('@');
+  const e1 = name.slice(0,2),
+        e2 = name.slice(-2);
+  return `${e1}***${e2}@${provider}`;
+}
 router.get("/myrole", authmiddle, async (req, res) => {
   const dbUser = await User.findById(req.user.id);
   res.json({ role: dbUser.privileges });

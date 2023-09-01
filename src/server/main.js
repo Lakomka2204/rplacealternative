@@ -14,7 +14,6 @@ ratelimit.default({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
-
 })
 require("dotenv").config();
 const app = express();
