@@ -25,6 +25,12 @@ router.get("/me", authmiddle, async (req, res) => {
     integrations
   });
 });
+router.delete("/me",authmiddle, async (req,res) => {
+  const user = await User.findById(req.user.id);
+  user.isDeleted = true;
+  await user.save();
+  res.sendStatus(200);
+});
 function censorEmail(email)
 {
   const [name, provider] = email.split('@');
@@ -32,14 +38,14 @@ function censorEmail(email)
         e2 = name.slice(-2);
   return `${e1}***${e2}@${provider}`;
 }
-router.get("/myrole", authmiddle, async (req, res) => {
-  const dbUser = await User.findById(req.user.id);
-  res.json({ role: dbUser.privileges });
+router.get('/my/:property',authmiddle, async(req,res) => {
+  const user = await User.findById(req.user.id);
+  const prop = req.params.property;
+  if (['password','placeCooldown','ban','isDeleted'].includes(prop))
+    return res.status(403).json({error:"Forbidden"});
+  res.send(user[prop])
 });
-router.get("/myid", authmiddle, async (req, res) => {
-  const dbUser = await User.findById(req.user.id);
-  res.json({ id: dbUser._id });
-});
+
 router.get("/mycd", authmiddle, async (req, res) => {
   const dbUser = await User.findById(req.user.id);
   res.json({ cd: dbUser.placeCooldown });

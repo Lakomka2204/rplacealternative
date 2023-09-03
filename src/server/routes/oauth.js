@@ -63,10 +63,10 @@ router.get("/discord-token", async (req, res) => {
       const user = await User.findOne({ email });
       let token;
       if (user) {
-        // if (user.ban.isBanned) {
-        //   errData.append("error", "You are banned. Reason: " + user.ban.reason);
-        //   return res.redirect("/?" + errData.toString());
-        // }
+        if (user.isDeleted) {
+          errData.append("error", "The account is deleted.");
+          return res.redirect("/?" + errData.toString());
+        }
         if (!user.discordId){
           user.discordId = id;
           await user.save();
@@ -123,6 +123,7 @@ router.get("/discord", (_req, res) => {
   res.redirect(process.env.DISCORD_REDIRECT);
 });
 router.get("/google-token", async (req, res) => {
+  const errData = new URLSearchParams();
   try {
     const { code, error } = req.query;
     if (error) return res.status(401).json({ error });
@@ -140,12 +141,10 @@ router.get("/google-token", async (req, res) => {
     const user = await User.findOne({ email });
     let token;
     if (user) {
-      // if (user.ban.isBanned) {
-      //   const redirParams = new URLSearchParams({
-      //     error: "You are banned. Reason: " + user.ban.reason,
-      //   });
-      //   return res.redirect("/?" + redirParams.toString());
-      // }
+      if (user.isDeleted) {
+        errData.append("error", "The account is deleted.");
+        return res.redirect("/?" + errData.toString());
+      }
       if (!user.googleId) {
         user.googleId = id;
         await user.save();
@@ -184,10 +183,8 @@ router.get("/google-token", async (req, res) => {
     res.redirect("/?" + redirParams.toString());
   } catch (err) {
     console.error("google auth error", err);
-    const redirParams = new URLSearchParams({
-      error: "Could not login with Google account.",
-    });
-    res.redirect("/?" + redirParams.toString());
+    errData.append('error',"Could not login with Google account.")
+    res.redirect("/?" + errData.toString());
   }
 });
 router.get("/google", async (req, res) => {

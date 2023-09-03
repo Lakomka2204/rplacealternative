@@ -11,7 +11,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid creds" });
       if (
         email.length < 10 ||
-        email.match(
+        !email.match(
           /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
         )
       )
@@ -21,6 +21,8 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     const passMatch = await bcrypt.compare(password, user.password);
     if (!passMatch)
+      return res.status(401).json({ error: "Invalid username or password" });
+    if (user.isDeleted)
       return res.status(401).json({ error: "Invalid username or password" });
     if (user.ban.isBanned)
       return res
@@ -49,7 +51,7 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Invalid creds" });
     if (
       email.length < 10 ||
-      email.match(
+      !email.match(
         /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
       )
     )

@@ -253,8 +253,8 @@ function resetZoom() {
 }
 async function checkauth() {
   try {
-    const res = await axios.get('/users/myrole');
-    isAdmin.value = res.data.role === 'admin';
+    const res = await axios.get('/users/my/privileges');
+    isAdmin.value = res.data === 'admin';
     unauthorized.value = false;
   }
   catch

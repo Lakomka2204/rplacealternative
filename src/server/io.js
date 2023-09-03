@@ -25,6 +25,13 @@ module.exports = {
     io.on("connection", async (socket) => {
       socket.broadcast.emit("online", io.engine.clientsCount);
       const initpixels = await Pixel.find({});
+      initpixels.map(x => {
+        return {
+          color: x.color,
+          placedBy : x.placedBy,
+          position: x.position,
+        }
+      });
       socket.on('ping',()=>{
         socket.emit('pong');
       })

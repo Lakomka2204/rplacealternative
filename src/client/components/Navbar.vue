@@ -41,18 +41,48 @@
       </div>
     </div>
   </nav>
-  <Modal v-if="isLoggedIn" title="Account info" :id="accountModalId">
+  <Modal title="Account info" :id="accountModalId">
     <template #modal-body>
-      <div v-if="accountInfo.id"
-        v-for="accountProp in Object.keys(accountInfo).filter(x => !['isBanned', 'integrations'].includes(x))"
-        class="row gap-3">
-        <label class="col-sm-2 col-form-label text-secondary w-25" :for="'userInfo-' + accountProp">
-          <small>{{ userInfoLabels[accountProp] }}</small>
-        </label>
-        <input :id="'userInfo-' + accountProp" readonly class="form-control-plaintext w-auto flex-grow-1"
-          :value="accountInfo[accountProp]" />
+      <span v-if="accountInfo.error && !accountInfo.id" class="text-danger text-center mx-auto">
+        {{ accountInfo.error }}
+      </span>
+      <div :hidden="!accountInfo.id" class="container">
+        <div class="row gap-3">
+          <label class="col-sm-2 col-form-label text-secondary w-25" for="ui-id">
+            <small>ID</small>
+          </label>
+          <input id="ui-id" readonly class="form-control-plaintext w-auto flex-grow-1" :value="accountInfo.id">
+        </div>
+        <div class="row gap-3">
+          <label class="col-sm-2 col-form-label text-secondary w-25" for="ui-username">
+            <small>Username</small>
+          </label>
+          <input id="ui-username" readonly class="form-control-plaintext w-auto flex-grow-1"
+            :value="accountInfo.username">
+          <button class="btn btn-link w-25 flex-grow-1" :data-bs-target="changeUsernameId" data-bs-toggle="modal">Change</button>
+        </div>
+        <div class="row gap-3">
+          <label class="col-sm-2 col-form-label text-secondary w-25" for="ui-email">
+            <small>Email</small>
+          </label>
+          <input id="ui-email" readonly class="form-control-plaintext w-auto flex-grow-1" :value="accountInfo.email">
+          <button class="btn btn-link w-25 flex-grow-1" @click="showEmail">Show</button>
+        </div>
+        <div class="row gap-3 align-items-center">
+          <label class="col-sm-2 col-form-label text-secondary w-25" for="ui-role">
+            <small>Role</small>
+          </label>
+          <input id="ui-role" readonly class="form-control-plaintext w-50 " :value="accountInfo.role">
+        </div>
+        <div class="row gap-3 align-items-center">
+          <label class="col-sm-2 col-form-label text-secondary w-25" for="ui-reg">
+            <small>Registration date</small>
+          </label>
+          <input id="ui-reg" readonly class="form-control-plaintext w-auto flex-grow-1"
+            :value="new Date(accountInfo.createdAt).toUTCString()">
+        </div>
       </div>
-      <div class="container d-flex" v-else>
+      <div class="container d-flex" v-if="!accountInfo.id">
         <div class="spinner-border mx-auto align-self-center" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
@@ -60,7 +90,19 @@
 
     </template>
     <template #modal-footer>
+      <button class="btn btn-outline-danger" @click="toggleModal(accountModal,delAccountModal)">Delete
+        Account</button>
       <button class="btn btn-secondary" data-bs-dismiss="modal" :data-bs-target="accountModalId">Close</button>
+    </template>
+  </Modal>
+  <Modal title="Delete Account" :id="deleteAccountId">
+    <template #modal-body>
+      <h4 class="fw-bold text-danger p-0 m-0">Warning</h4>
+      All your 3rd party links will <strong>not</strong> be unlinked after you delete account and therefore you will not be able to login using them after you delete account.
+    </template>
+    <template #modal-footer>
+      <button data-bs-dismiss="modal" :data-bs-target="deleteAccountId" class="btn btn-secondary">Cancel</button>
+      <button @click="deleteAccount" class="btn btn-danger">Delete</button>
     </template>
   </Modal>
   <form class="needs-validation" novalidate @submit.prevent="loginSubmit">
@@ -183,6 +225,7 @@ const initAccountInfo = {
   role: null,
   integrations: [],
   createdAt: new Date(0),
+  error: null
 }
 const accountInfo = reactive({ ...initAccountInfo })
 const connectionStatus = ref(SocketStatus[0]);
@@ -191,10 +234,12 @@ watch(() => props.conStatus, (newStatus) => {
   socketerror = [3, 5].includes(newStatus);
 });
 let socketerror = false;
-let loginModal, regModal, accountModal;
+let loginModal, regModal, accountModal, changeUsernameModal, delAccountModal;
 const lModalId = "loginModal";
 const rModalId = 'registerModal';
 const accountModalId = 'myaccountModal';
+const changeUsernameId = "uchangeModal";
+const deleteAccountId = 'delaccountModal';
 
 const emit = defineEmits(['toast', 'socketping']);
 watch(() => props.ping, (newPing) => {
@@ -208,8 +253,54 @@ const props = defineProps({
   ping: Number
 });
 let toggle = false;
-function getAccountInfo() {
+function toggleModal(oldModal,newModal){
+  oldModal.hide();
+  newModal.show();
+}
+async function deleteAccount(ev)
+{
+  try{
+    await axios.delete('/users/me');
+    logout();
+    delAccountModal.hide();
+  }
+  catch (err) {
+    emit('toast',{message: err?.data || err.message || "Couldn't delete account because of an internal error, try again in a few minutes.",type:"error" });
+  }
+}
+async function getAccountInfo() {
   accountModal.show();
+  if (!Cookies.get('u'))
+    accountInfo.error = "You are not logged in";
+  else if (!accountInfo.id) {
+    console.log('cookie ');
+    if (!accountInfo.id || accountInfo.error)
+      try {
+        const res = await axios.get('/users/me');
+        for (let resProp of Object.keys(res.data)) {
+          if (userInfoLabels[resProp])
+            accountInfo[resProp] = res.data[resProp]
+        }
+        accountInfo.error = null;
+        isLoggedIn.value = res?.data?.id != undefined;
+        isAdmin.value = res.data.role == 'admin';
+      }
+      catch
+      {
+        accountInfo.error = "Error fetching user. Please clear your cache or relog.";
+      }
+  }
+}
+async function showEmail(ev) {
+  ev.target.remove();
+  const e = document.getElementById('ui-email');
+  try {
+    const res = await axios.get('/users/my/email');
+    accountInfo.email = res.data;
+  }
+  catch (err) {
+    emit('toast', { message: err?.response?.data?.error || err.message || "Who let the bro cook?", type: 'error' });
+  }
 }
 function setPopoverText(text) {
   const popover = bootstrap.Popover.getInstance('#pingpopover');
@@ -254,6 +345,7 @@ async function checkUser() {
         if (userInfoLabels[resProp])
           accountInfo[resProp] = res.data[resProp]
       }
+      accountInfo.error = null;
       isLoggedIn.value = res?.data?.id != undefined;
       isAdmin.value = res.data.role == 'admin';
     }
@@ -282,6 +374,8 @@ onMounted(async () => {
   loginModal = new bootstrap.Modal(document.getElementById(lModalId));
   regModal = new bootstrap.Modal(document.getElementById(rModalId));
   accountModal = new bootstrap.Modal(document.getElementById(accountModalId));
+  delAccountModal = new bootstrap.Modal(document.getElementById(deleteAccountId));
+  changeUsernameModal = new bootstrap.Modal(document.getElementById(changeUsernameId));
 });
 watch(isDarkTheme, (newTheme) => {
   document.documentElement.setAttribute('data-bs-theme', newTheme ? "dark" : "light");
@@ -363,5 +457,4 @@ async function loginSubmit(ev) {
 .google-color {
   background-color: #4285F4;
   color: var(--bs-white);
-}
-</style>
+}</style>
