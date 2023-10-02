@@ -60,7 +60,7 @@ module.exports = {
             return socket.emit("placedresult", { msg: "Invalid color" });
           if (
             !withinrange(x, 0, process.env.CVSX) ||
-            !withinrange(x, 0, process.env.CVSY)
+            !withinrange(y, 0, process.env.CVSY)
           )
             return socket.emit("placedresult", { msg: "Invalid placement" });
           const cooldownDate = new Date(Date.now()+process.env.PLACECOOLDOWN*1000);
